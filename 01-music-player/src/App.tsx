@@ -1,33 +1,70 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
+import type { Track } from './types/track';
+import { tracks } from './data/tracks';
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // defining states
+  const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+
+  const currentTrack: Track = tracks[currentTrackIndex];
+  
+  
+  // Play Pause Logic
+  const togglePlay = () => {
+
+    if(!audioRef.current) return;
+    if(isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  }
+
+  // Track Navigation 
+
+  const playNext = () => {
+    setCurrentTrackIndex((prev) => prev === tracks.length - 1? 0 : prev + 1)
+  };
+
+  const playPrev = () => {
+    setCurrentTrackIndex((prev) => prev === 0? tracks.length - 1: prev - 1)
+  }
+
+  useEffect(() => {
+    if(!audioRef) return;
+
+    if(isPlaying) {
+      audioRef.current?.load();
+      audioRef.current?.play();
+    }
+  }, [currentTrackIndex])
+
+  // 
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="music-player">
+    <div className="track">
+    <div className="cover-img">
+    <img src={currentTrack.cover} alt="" />
+    </div>
+      <audio ref={audioRef} src={currentTrack.src}/>
+      <h2>{currentTrack.title}</h2>
+      <p>{currentTrack.artist}</p>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <div className="controller">
+        <button onClick={playPrev}>&lt; Prev</button>
+        <button onClick={togglePlay}>{isPlaying? "❚❚" : "▶"}</button>
+        <button onClick={playNext}>Next {">"}</button>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      </div>
     </>
   )
 }
